@@ -17,10 +17,10 @@
 
 
                   ----USB----
-      LED   D13		|         |     D12   12    D6
+  LED + CLK D13		|         |     D12   12    D6
             3V3		|         |     D11   11    D5
             REF		|         |     D10   10    D4
-      D7    A0		|         |      D9    9    D3
+            A0		|         |      D9    9    D3
             A1		|         |      D8    8    D2
             A2		|         |      D7    7    D1
             A3		|         |      D6    6    D0
@@ -33,7 +33,22 @@
             GND		|         |      D1    1    TX
             VIN		|         |      D0    0    RX
                   -----------
+
+Displayen...
 Blå = data, lila = clk, vit NC, svart = gnd, grå = +5
+
+            PIO      Edge
+        A0  15       6
+        A1  14       7
+        A2  13       8        
+        A3  12       9
+        A4  10       2
+        A5   9       3
+        A6   8       4
+        A7   7       1
+        +5          11
+       GND          12
+
 
 const char SBC_ADDR[] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52};
 void set_address(const unsigned long address) {
@@ -45,10 +60,11 @@ void set_address(const unsigned long address) {
 }
 */
 
-#include <TM1651.h>
+#include "TM1651.h"
 #include <PS2KeyAdvanced.h>
 
-const byte OUTS[] PROGMEM = {6,7,8,9,10,11,12}; // Port numbers for the 7 output bits
+// Pins used for 7-bit keyboard data
+const byte OUTS[] PROGMEM = {6,7,8,9,10,11,12,13}; // Port numbers for the 7 output bits
 
 
 // PS2 and i2c pins
@@ -59,84 +75,80 @@ const byte OUTS[] PROGMEM = {6,7,8,9,10,11,12}; // Port numbers for the 7 output
 
 
 TM1651 Display(I2CCLK,I2CDIO);
-int i = 999;
-uint16_t c;
-PS2KeyAdvanced keyboard;
+word currentKey;
+PS2KeyAdvanced Keyboard;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  Serial.begin(9600);
-  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);
 
-  keyboard.begin(PS2DATA, PS2CLK);
-  keyboard.setNoBreak(1);         // No break codes for keys (when key released)
-  keyboard.setNoRepeat(1);        // Don't repeat shift ctrl etc
+  Keyboard.begin(PS2DATA, PS2CLK);
+  Keyboard.setNoBreak(1);         // No break codes for keys (when key released)
+  Keyboard.setNoRepeat(1);        // Don't repeat shift ctrl etc
 
   Display.displaySet(1);  //BRIGHT_TYPICAL = 2,BRIGHT_DARKEST = 0,BRIGHTEST = 7;
   Display.displayDP(0);
-  Display.displayInteger(i);
+  Display.displayInteger(997);
 
   Serial.println("frax was here!");
-  dumpBin(0x01);
-  dumpBin(0x80);
-  dumpBin(0x55);
-  dumpBin(0xaa);
-
-  pinMode(A0, OUTPUT);
-  Serial.println(14);
-  Serial.println(A0);
+  
+  // pinMode(A0, OUTPUT);
   // Serial.println(LED_BUILTIN);
 
-  // Setup 7 bits for output
-  for (int i=0; i++<=7;) {
+  // Setup 7 bits for output + clk
+  for (int i=0; i<=7;i++) {
     pinMode(OUTS[i], OUTPUT);
   }
+
+  // Set clk low
+  digitalWrite(OUTS[7], LOW);
 }
 
 // the loop function runs over and over again forever
 void loop() {
 
-  if( keyboard.available( ) ) {
+  if(Keyboard.available()) {
     // read the next key
-    c = keyboard.read( );
-    if( c > 0 ) {
-      handleKeyboard(c);
-      /*
-      Serial.print( "Value " );
-      Serial.print( c, HEX );
-      // dumpBin(c);
-      Serial.print( " - Status Bits " );
-      // Serial.print( c >> 8, HEX );
-      dumpBin(c >> 8);
-      Serial.print( "  Code " );
-      Serial.println( c & 0xFF, HEX );
-      */
+    currentKey = Keyboard.read( );
+    if( currentKey > 0 ) {
+      handleKeyboard(currentKey);
     }
   }
-
-  /*
-  digitalWrite(A0, HIGH);
-  delay(500);
-  digitalWrite(A0, LOW);
-  delay(500);
-  */
-  /*
-  delay(20);
-  Display.displayInteger(i--);
-  if (i == 0) { i = 999; }
-  */
 }
 
 void dumpBin(byte b) {
-  for (int i=0; i++<=7;) {
+  for (int i=0; i<=7;i++) {
     Serial.print (b & 0x80 ? '1' : '0');
     b = b << 1;
   }
-  Serial.println();
 }
 
 void handleKeyboard(word k) {
-  dumpBin(k >> 8);
+  // dumpBin(k);
+  // dumpBin(k >> 8);
+  
+  int translated = getKeycode(k & 0xff);
+  Display.displayInteger(translated);
+  if (translated == 255) {
+    Serial.println(k & 0xff, HEX);      
+    return;
+  }
+  
+  // Dump to serial
+  dumpBin(k);
+  Serial.print(" -> ");
+  dumpBin(getKeycode(k));
+  Serial.println();
+
+  // Output...
+  byte value = translated;
+  for (int i=0;i<=6;i++) { // Only 7-bits
+    digitalWrite(OUTS[i], value & 1);
+    value = value >> 1;
+  }
+  digitalWrite(OUTS[7], HIGH);
+  delay(20);
+  digitalWrite(OUTS[7], LOW);
 }
 
 byte getKeycode(byte ps2) {
@@ -293,6 +305,26 @@ byte getKeycode(byte ps2) {
       break;
     case 0x1f:
       return 0x20;
+      break;      
+    default:
+      return 0xff;    
       break;
   }
 }
+
+
+
+/*
+
+
+
+
+      Serial.print( "Value " );
+      Serial.print( c, HEX );
+      // dumpBin(c);
+      Serial.print( " - Status Bits " );
+      // Serial.print( c >> 8, HEX );
+      dumpBin(c >> 8);
+      Serial.print( "  Code " );
+      Serial.println( c & 0xFF, HEX );
+*/
