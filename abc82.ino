@@ -38,33 +38,32 @@ Displayen...
 Blå = data, lila = clk, vit NC, svart = gnd, grå = +5
 
             PIO      Edge
-        A0  15       6
-        A1  14       7
-        A2  13       8        
-        A3  12       9
-        A4  10       2
-        A5   9       3
-        A6   8       4
-        A7   7       1
-        +5          11
-       GND          12
+        A0  15       6  Orange
+        A1  14       7  Red
+        A2  13       8  Brown
+        A3  12       9  Black
+        A4  10       2  Blue
+        A5   9       3  Green
+        A6   8       4  Yellow
+        A7   7       1  Purple
+        +5          11  White
+       GND          12  Grey
 
 
-const char SBC_ADDR[] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52};
-void set_address(const unsigned long address) {
-  unsigned long value = address;
-  for (int i = 15; i >= 0; i--) {
-    digitalWrite(SBC_ADDR[i], value & 1);
-    value = value >> 1;
-  }
-}
+
+A = 0x61 = 0110 0001 
+_ = 0x5f = 0101 1111
+O = 0x4f = 0100 1111
+
+
+
 */
 
 #include "TM1651.h"
 #include <PS2KeyAdvanced.h>
 
 // Pins used for 7-bit keyboard data
-const byte OUTS[] PROGMEM = {6,7,8,9,10,11,12,13}; // Port numbers for the 7 output bits
+const int OUTS[] = {6,7,8,9,10,11,12,13}; // Port numbers for the 7 output bits
 
 
 // PS2 and i2c pins
@@ -117,9 +116,8 @@ void loop() {
 }
 
 void dumpBin(byte b) {
-  for (int i=0; i<=7;i++) {
-    Serial.print (b & 0x80 ? '1' : '0');
-    b = b << 1;
+for (unsigned int test = 0x80; test; test >>= 1) {
+    Serial.write(b  & test ? '1' : '0');
   }
 }
 
@@ -135,9 +133,13 @@ void handleKeyboard(word k) {
   }
   
   // Dump to serial
-  dumpBin(k);
+  dumpBin(k & 0xff);
+  Serial.print(' ');
+  Serial.print(k & 0xff, HEX);
   Serial.print(" -> ");
-  dumpBin(getKeycode(k));
+  dumpBin(translated);
+  Serial.print(' ');
+  Serial.print(translated & 0xff, HEX);
   Serial.println();
 
   // Output...
@@ -147,7 +149,7 @@ void handleKeyboard(word k) {
     value = value >> 1;
   }
   digitalWrite(OUTS[7], HIGH);
-  delay(20);
+  delay(40);
   digitalWrite(OUTS[7], LOW);
 }
 
