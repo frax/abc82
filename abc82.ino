@@ -77,7 +77,13 @@ O = 0x4f = 0100 1111
 
 // Pins used for 7-bit keyboard data
 const int OUTS[] = {6,7,8,9,10,11,12,13}; // Port numbers for the 7 output bits
-
+const byte ASCII[256] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  // SP,!,",#,$,%,&,',(,),*,+,,,-,.,/
+  0x20,0x21,0x22,0x
+  // 0,1,2,3,4,5,6,7,8,9,:,;,<,=,>,?
+}
 
 // PS2 and i2c pins
 #define PS2CLK  2
@@ -193,7 +199,11 @@ Serial.print(k&0xff, HEX);
   Display.displayInteger(translated);
 
   // Output...
-  byte value = translated;
+  outputKeycode(translated);
+}
+
+void outputKeycode(byte c) {
+  byte value = c;
   for (int i=0;i<=6;i++) { // Only 7-bits
     digitalWrite(OUTS[i], value & 1);
     value = value >> 1;
