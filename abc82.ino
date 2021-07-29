@@ -238,7 +238,9 @@ void setup() {
 
   Display.displaySet(1);  //BRIGHT_TYPICAL = 2,BRIGHT_DARKEST = 0,BRIGHTEST = 7;
   Display.displayDP(0);
-  Display.displayInteger(82);
+  Display.displayNum(0,10);
+  Display.displayNum(1,8);
+  Display.displayNum(2,2);
 
   Serial.println("frax was here!");
   
