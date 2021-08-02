@@ -12,5 +12,3 @@ Från början ett ersättningskretskort till det numeriska tangentbordet ABCxx. 
  - Tangentbordskoder för ctrl och shift + ctrl
  - Ctrl+alt+del = reset
  - Pil upp/ner för Smartaid
- - Alt + l = list mfl.
- - Refactoring
