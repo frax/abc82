@@ -9,6 +9,6 @@ Från början ett ersättningskretskort till det numeriska tangentbordet ABCxx. 
 
 ## Todo
  - Fixa nya kretskort
- - Tangentbordskoder för ctrl och shift + ctrl
+ - Reducera minneshanteringen
  - Ctrl+alt+del = reset
  - Pil upp/ner för Smartaid

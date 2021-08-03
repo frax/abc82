@@ -77,7 +77,7 @@ Blå = data, lila = clk, vit NC, svart = gnd, grå = +5
 // startram.bas is quite big, including it will probablt not fit in a
 // ATmega168 but if your running on a 328 you probably are fine.
 // Booting your MEG80 from flash or don't have one? Then you don't need this.
-#define STARTRAM
+// #define STARTRAM 
 #ifdef STARTRAM
   #include "startram.h"
 #endif
@@ -175,14 +175,24 @@ void handleKeyboard(word k) {
   Serial.println();
 */
 
-  int translated = 255;  // Default to fail
+  byte translated = 255;  // Default to fail
 
-  // Need to add ctrl and ctrl + shift
+  // Ctrl + shif
+  if (k & PS2_SHIFT && k & PS2_CTRL) {
+    translated = getCtrlShiftKeycode(k & 0xff);
+  }
 
-  if (k & PS2_SHIFT) { // Get shifted codes...
+  // Ctrl
+  if (k & PS2_CTRL && translated == 255) {
+    translated = getCtrlKeycode(k & 0xff);
+  }
+
+  // Shift
+  if (k & PS2_SHIFT && translated == 255) {
     translated = getShiftedKeycode(k & 0xff);
   }  
 
+  // No modifier keys
   if (translated == 255) {
     translated = getKeycode(k & 0xff);
   }
@@ -541,6 +551,329 @@ byte getShiftedKeycode(byte ps2) {
   }
 }
 
+byte getCtrlKeycode(byte ps2) {
+  switch (ps2) {
+    case 0x31:		//1
+      return 0x31;
+      break;
+    case 0x32:		//2
+      return 0x32;
+      break;
+    case 0x33:		//3
+      return 0x33;
+      break;
+    case 0x34:		//4
+      return 0x34;
+      break;
+    case 0x35:		//5
+      return 0x35;
+      break;
+    case 0x36:		//6
+      return 0x36;
+      break;
+    case 0x37:		//7
+      return 0x37;
+      break;
+    case 0x38:		//8
+      return 0x38;
+      break;
+    case 0x39:		//9
+      return 0x39;
+      break;
+    case 0x30:		//0
+      return 0x30;
+      break;
+    case 0x3c:		//+/?
+      return 0x2b;
+      break;
+    case 0x5f:		//É
+      return 0x00;
+      break;
+    case 0x8b:		//</>
+      return 0x7f;
+      break;
+    case 0x51:		//q
+      return 0x11;
+      break;
+    case 0x57:		//w
+      return 0x17;
+      break;
+    case 0x45:		//e
+      return 0x05;
+      break;
+    case 0x52:		//r
+      return 0x12;
+      break;
+    case 0x54:		//t
+      return 0x14;
+      break;
+    case 0x59:		//y
+      return 0x19;
+      break;
+    case 0x55:		//u
+      return 0x15;
+      break;
+    case 0x49:		//i
+      return 0x09;
+      break;
+    case 0x4f:		//o
+      return 0x0f;
+      break;
+    case 0x50:		//p
+      return 0x10;
+      break;
+    case 0x5d:		//å
+      return 0x1d;
+      break;
+    case 0x5e:		//ü
+      return 0x1e;
+      break;
+    case 0x1e:		//enter
+      return 0x0d;
+      break;
+    case 0x41:		//a
+      return 0x01;
+      break;
+    case 0x53:		//s
+      return 0x13;
+      break;
+    case 0x44:		//d
+      return 0x04;
+      break;
+    case 0x46:		//f
+      return 0x06;
+      break;
+    case 0x47:		//g
+      return 0x07;
+      break;
+    case 0x48:		//h
+      return 0x08;
+      break;
+    case 0x4a:		//j
+      return 0x0a;
+      break;
+    case 0x4b:		//k
+      return 0x0b;
+      break;
+    case 0x4c:		//l
+      return 0x0c;
+      break;
+    case 0x5b:		//ö
+      return 0x1c;
+      break;
+    case 0x3a:		//ä
+      return 0x1b;
+      break;
+    case 0x5c:		///*
+      return 0x27;
+      break;
+    case 0x15:		//pil, vänster
+      return 0x08;
+      break;
+    case 0x5a:		//z
+      return 0x1a;
+      break;
+    case 0x58:		//x
+      return 0x18;
+      break;
+    case 0x43:		//c
+      return 0x03;
+      break;
+    case 0x56:		//v
+      return 0x16;
+      break;
+    case 0x42:		//b
+      return 0x02;
+      break;
+    case 0x4e:		//n
+      return 0x0e;
+      break;
+    case 0x4d:		//m
+      return 0x0d;
+      break;
+    case 0x3b:		//,;
+      return 0x2c;
+      break;
+    case 0x3d:		//.:
+      return 0x2e;
+      break;
+    case 0x3e:		//-_
+      return 0x2d;
+      break;
+    case 0x16:		//pil, höger
+      return 0x09;
+      break;
+    case 0x1f:		//space
+      return 0x20;
+      break;
+    default:
+    return 0xff;
+    break;
+  }
+}
+
+byte getCtrlShiftKeycode(byte ps2) {
+    switch (ps2) {
+      case 0x31:		//1
+        return 0x21;
+        break;
+      case 0x32:		//2
+        return 0x22;
+        break;
+      case 0x33:		//3
+        return 0x23;
+        break;
+      case 0x34:		//4
+        return 0x24;
+        break;
+      case 0x35:		//5
+        return 0x25;
+        break;
+      case 0x36:		//6
+        return 0x26;
+        break;
+      case 0x37:		//7
+        return 0x2f;
+        break;
+      case 0x38:		//8
+        return 0x28;
+        break;
+      case 0x39:		//9
+        return 0x29;
+        break;
+      case 0x30:		//0
+        return 0x3d;
+        break;
+      case 0x3c:		//+/?
+        return 0x3f;
+        break;
+      case 0x5f:		//É
+        return 0x00;
+        break;
+      case 0x8b:		//</>
+        return 0x7f;
+        break;
+      case 0x51:		//q
+        return 0x11;
+        break;
+      case 0x57:		//w
+        return 0x17;
+        break;
+      case 0x45:		//e
+        return 0x05;
+        break;
+      case 0x52:		//r
+        return 0x12;
+        break;
+      case 0x54:		//t
+        return 0x14;
+        break;
+      case 0x59:		//y
+        return 0x19;
+        break;
+      case 0x55:		//u
+        return 0x15;
+        break;
+      case 0x49:		//i
+        return 0x09;
+        break;
+      case 0x4f:		//o
+        return 0x1f;
+        break;
+      case 0x50:		//p
+        return 0x00;
+        break;
+      case 0x5d:		//å
+        return 0x1d;
+        break;
+      case 0x5e:		//ü
+        return 0x1e;
+        break;
+      case 0x1e:		//enter
+        return 0x0d;
+        break;
+      case 0x41:		//a
+        return 0x01;
+        break;
+      case 0x53:		//s
+        return 0x13;
+        break;
+      case 0x44:		//d
+        return 0x04;
+        break;
+      case 0x46:		//f
+        return 0x06;
+        break;
+      case 0x47:		//g
+        return 0x07;
+        break;
+      case 0x48:		//h
+        return 0x08;
+        break;
+      case 0x4a:		//j
+        return 0x0a;
+        break;
+      case 0x4b:		//k
+        return 0x1b;
+        break;
+      case 0x4c:		//l
+        return 0x1c;
+        break;
+      case 0x5b:		//ö
+        return 0x1c;
+        break;
+      case 0x3a:		//ä
+        return 0x1b;
+        break;
+      case 0x5c:		///*
+        return 0x2a;
+        break;
+      case 0x15:		//pil, vänster
+        return 0x08;
+        break;
+      case 0x5a:		//z
+        return 0x1a;
+        break;
+      case 0x58:		//x
+        return 0x18;
+        break;
+      case 0x43:		//c
+        return 0x03;
+        break;
+      case 0x56:		//v
+        return 0x16;
+        break;
+      case 0x42:		//b
+        return 0x02;
+        break;
+      case 0x4e:		//n
+        return 0x1e;
+        break;
+      case 0x4d:		//m
+        return 0x1d;
+        break;
+      case 0x3b:		//,;
+        return 0x3b;
+        break;
+      case 0x3d:		//.:
+        return 0x3a;
+        break;
+      case 0x3e:		//-_
+        return 0x5f;
+        break;
+      case 0x16:		//pil, höger
+        return 0x09;
+        break;
+      case 0x1f:		//space
+        return 0x20;
+        break;
+
+      default:
+        return 0xff;    
+        break;
+  }
+}
+
 byte getSpecial(byte ps2) {
   switch (ps2) {
     case 0x1c:    // Backspace = pil vänster
@@ -552,8 +885,7 @@ byte getSpecial(byte ps2) {
   }
 }
 
-// Sends a string to the ABC80
-// Used by macros below
+// Sends a string to the ABC80, used by macros below
 void sendString(String s) {
   for (int i=0;i<=s.length();i++) {
     outputKeycode(ASCII[s[i]]);
@@ -587,7 +919,7 @@ void doMacro(byte ps2) {
 }
 
 #ifdef STARTRAM
-void dumpProgmemString(char *line) {
+void dumpProgmemString(const char *line) {
   int counter = 0;
   char c = 255;
   while(c != 0) {
