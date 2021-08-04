@@ -1,34 +1,16 @@
 /*
  * https://github.com/techpaul/PS2KeyAdvanced
- * https://github.com/techpaul/PS2KeyAdvanced/blob/master/examples/SimpleTest/SimpleTest.ino
  * https://www.botnroll.com/img/cms/Arduino-Nano-pinout.jpg
  *
  * PS2, ABC, Kommentar
  * \t(..)\t(..)\t(.*)
  * case 0x$1:\t\t//$3\n\treturn 0x$2;\n\tbreak;
- * 
- * #define PS2_BREAK   0x8000
- * #define PS2_SHIFT   0x4000
- * #define PS2_CTRL    0x2000
- * #define PS2_CAPS    0x1000
- * #define PS2_ALT      0x800
- * #define PS2_ALT_GR   0x400
- * #define PS2_GUI      0x200
- * #define PS2_FUNCTION 0x100
- * 
- * frax was here!
- * 
- * IDE Settings...
- * Arduino NANO, ATmega 168
- * 
- * TODO
-  Map keys to ABC80 keys, 7bit + strobe
-  Add shortcuts for list, run, run lib etc.
-  Ctrl+Alt+Del = reset
-  Ctrl + <> = del 0x7f, ??
-  Smartaid mapping, cursor
-  Style fix, variables, functions etc.  
+ 
+ Probably won't run on an ATmega168, should run on a ATmega328 but
+ I haven't tested since I upgrade to a Nano Every.
 
+Schematics :)
+D0 - 6 + CLK should map directly to D0-7 on the PIO
                   ----USB----
   LED + CLK D13		|         |     D12   12    D6
             3V3		|         |     D11   11    D5
@@ -47,9 +29,9 @@
             VIN		|         |      D0    0    RX
                   -----------
 
-Displayen...
-Blå = data, lila = clk, vit NC, svart = gnd, grå = +5
 
+PIO to Edge pin number, at least ackording to my hacked up
+Jamma adapter numbers and the colors of my duponts, just ignore it...
             PIO      Edge
         A0  15       6  Orange
         A1  14       7  Red
@@ -61,7 +43,6 @@ Blå = data, lila = clk, vit NC, svart = gnd, grå = +5
         A7   7       1  Purple
         +5          11  White
        GND          12  Grey
-
 */
 
 // If you have an old Gotek led display, define this and
@@ -177,27 +158,27 @@ void handleKeyboard(word k) {
 
   byte translated = 255;  // Default to fail
 
-  // Ctrl + shif
-  if (k & PS2_SHIFT && k & PS2_CTRL) {
-    translated = getCtrlShiftKeycode(k & 0xff);
-  }
-
   // Ctrl
-  if (k & PS2_CTRL && translated == 255) {
+  if (k & PS2_CTRL) {
     translated = getCtrlKeycode(k & 0xff);
   }
 
   // Shift
-  if (k & PS2_SHIFT && translated == 255) {
+  if (k & PS2_SHIFT) {
     translated = getShiftedKeycode(k & 0xff);
   }  
+
+  // Ctrl + shift
+  if (k & PS2_SHIFT && k & PS2_CTRL) {
+    translated = getCtrlShiftKeycode(k & 0xff);
+  }
 
   // No modifier keys
   if (translated == 255) {
     translated = getKeycode(k & 0xff);
   }
 
-  // Do cool stuff like esc = ctrl+x, handle backspace
+  // Do cool stuff like esc = ctrl+c, handle backspace, etc...
   if (translated == 255) {
     translated = getSpecial(k & 0xff);    
   }
@@ -714,39 +695,6 @@ byte getCtrlKeycode(byte ps2) {
 
 byte getCtrlShiftKeycode(byte ps2) {
     switch (ps2) {
-      case 0x31:		//1
-        return 0x21;
-        break;
-      case 0x32:		//2
-        return 0x22;
-        break;
-      case 0x33:		//3
-        return 0x23;
-        break;
-      case 0x34:		//4
-        return 0x24;
-        break;
-      case 0x35:		//5
-        return 0x25;
-        break;
-      case 0x36:		//6
-        return 0x26;
-        break;
-      case 0x37:		//7
-        return 0x2f;
-        break;
-      case 0x38:		//8
-        return 0x28;
-        break;
-      case 0x39:		//9
-        return 0x29;
-        break;
-      case 0x30:		//0
-        return 0x3d;
-        break;
-      case 0x3c:		//+/?
-        return 0x3f;
-        break;
       case 0x5f:		//É
         return 0x00;
         break;
@@ -825,12 +773,6 @@ byte getCtrlShiftKeycode(byte ps2) {
       case 0x3a:		//ä
         return 0x1b;
         break;
-      case 0x5c:		///*
-        return 0x2a;
-        break;
-      case 0x15:		//pil, vänster
-        return 0x08;
-        break;
       case 0x5a:		//z
         return 0x1a;
         break;
@@ -855,19 +797,6 @@ byte getCtrlShiftKeycode(byte ps2) {
       case 0x3b:		//,;
         return 0x3b;
         break;
-      case 0x3d:		//.:
-        return 0x3a;
-        break;
-      case 0x3e:		//-_
-        return 0x5f;
-        break;
-      case 0x16:		//pil, höger
-        return 0x09;
-        break;
-      case 0x1f:		//space
-        return 0x20;
-        break;
-
       default:
         return 0xff;    
         break;
